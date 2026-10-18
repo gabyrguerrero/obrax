@@ -1,4 +1,5 @@
-"""OBRAx · Gestión y control de obra.   Ejecuta:  python main.py"""
+﻿"""OBRAx_v2 · Gestión y control de obra.   Ejecuta:  python main.py"""
+import os
 
 import flet as ft
 
@@ -22,4 +23,8 @@ def main(page: ft.Page) -> None:
 
 
 if __name__ == "__main__":
-    ft.run(main)
+    puerto = os.environ.get("PORT")
+    if puerto:  # en Render: se sirve como sitio web
+        ft.run(main, view=ft.AppView.WEB_BROWSER, host="0.0.0.0", port=int(puerto))
+    else:  # en tu computador: ventana de escritorio, como siempre
+        ft.run(main)
