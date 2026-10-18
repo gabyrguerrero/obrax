@@ -1,6 +1,6 @@
 {
-    "name": "obrax",
-    "short_name": "obrax",
+    "name": "obrax_build",
+    "short_name": "obrax_build",
     "start_url": ".",
     "display": "standalone",
     "background_color": "#ffffff",
