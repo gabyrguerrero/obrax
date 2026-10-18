@@ -1,4 +1,5 @@
 """Modelos de datos de OBRAx (dataclasses)."""
+
 from __future__ import annotations
 
 import json
@@ -22,6 +23,16 @@ class Obra:
     fin: date = field(default_factory=date.today)
     recargo_extra: float = 25.0  # % de recargo sobre la hora extra
     cierre: str = ""  # "", "solicitado" o "aprobado"
+    id: str = field(default_factory=nuevo_id)
+
+
+@dataclass
+class Usuario:
+    nombre: str
+    email: str
+    password_hash: str
+    salt: str
+    rol: str = "Residente"  # "Residente" o "Gerente"
     id: str = field(default_factory=nuevo_id)
 
 
@@ -113,3 +124,15 @@ class Reporte:
         self.avances = [Avance(**x) for x in d.get("avances", [])]
         self.asistencias = [Asistencia(**x) for x in d.get("asistencias", [])]
         self.fotos = [Foto(**x) for x in d.get("fotos", [])]
+
+
+@dataclass
+class Autorizado:
+    """Correo que el gerente autoriza a ingresar. El id es el propio correo."""
+
+    email: str
+    rol: str = "Residente"  # "Residente" o "Gerente"
+    id: str = ""
+
+    def __post_init__(self) -> None:
+        self.id = self.email
