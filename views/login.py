@@ -1,13 +1,12 @@
-"""Pantalla de ingreso y registro."""
+﻿"""Pantalla de ingreso y registro."""
 
 from __future__ import annotations
 
 import re
-import sqlite3
 
 import flet as ft
 
-from database.db import Repositorio
+from database.db import ErrorIntegridad, Repositorio
 from database.models import Usuario
 from services.auth import crear_hash, verificar
 from views import componentes as base
@@ -102,7 +101,7 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
             u = Usuario(nom, correo, h, salt, rol_final)
             try:
                 repo.guardar(u)
-            except sqlite3.IntegrityError:
+            except ErrorIntegridad:
                 error("Ese correo ya está registrado.")
                 return
             al_entrar(u)
@@ -142,3 +141,4 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
         ),
     )
     page.add(ft.Container(content=tarjeta, alignment=ft.Alignment(0, 0), expand=True))
+
