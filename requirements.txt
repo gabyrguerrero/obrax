@@ -1,4 +1,9 @@
-flet>=1.0
+flet==1.0.4
+flet-web==1.0.4
+fastapi==0.143.3
+starlette==1.8.0
+uvicorn==0.54.0
+pydantic==2.14.1
 openpyxl>=3.1
 fpdf2>=2.8
 psycopg[binary]>=3.2
