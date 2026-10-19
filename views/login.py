@@ -15,8 +15,6 @@ from views import componentes as base
 EMAIL_RE = re.compile(
     r"^[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*\.[A-Za-z]{2,}$"
 )
-# quien conozca este código puede registrarse como gerente; cámbialo por uno tuyo
-CODIGO_GERENTE = "obrax-gerente-2026"
 
 
 def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
@@ -37,12 +35,6 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
         width=320,
         visible=False,
     )
-    codigo = ft.TextField(
-        label="Código de gerente (opcional)",
-        password=True,
-        width=320,
-        visible=False,
-    )
     mensaje = ft.Text("", color=ft.Colors.RED_700)
     titulo = ft.Text("Ingresar", size=22, weight=base.NEGRITA)
 
@@ -58,7 +50,7 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
         cambio.content = (
             "¿Ya tienes cuenta? Ingresa" if r else "¿No tienes cuenta? Regístrate"
         )
-        nombre.visible = confirmar.visible = codigo.visible = r
+        nombre.visible = confirmar.visible = r
         mensaje.value = ""
         page.update()
 
@@ -71,19 +63,29 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
             error("Escribe un correo válido, por ejemplo nombre@dominio.com.")
             return
 
+        permiso = repo.autorizado_por_email(correo)
+
         if not registro["activo"]:  # --- ingresar ---
             u = repo.usuario_por_email(correo)
             if u is None or not verificar(clave, u.password_hash, u.salt):
                 error("Correo o contraseña incorrectos.")
                 return
+            if permiso is None:
+                error("Tu acceso fue retirado. Pide al gerente que te autorice.")
+                return
+            u.rol = permiso.rol  # el rol sale siempre de la lista del gerente
             al_entrar(u)
             return
 
         # --- registrar ---
         nom = (nombre.value or "").strip()
-        codigo_ingresado = (codigo.value or "").strip()
+        primero = not repo.hay_usuarios()  # el primer usuario queda como gerente
 
-        if not nom:
+        if permiso is None and not primero:
+            error("Ese correo no está autorizado. Pide al gerente que lo agregue.")
+        elif repo.usuario_por_email(correo):
+            error("Ese correo ya está registrado.")
+        elif not nom:
             error("Escribe tu nombre.")
         elif any(c.isdigit() for c in nom):
             error("El nombre no puede tener números.")
@@ -91,13 +93,13 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
             error("La contraseña debe tener al menos 6 caracteres.")
         elif clave != (confirmar.value or ""):
             error("Las contraseñas no coinciden.")
-        elif codigo_ingresado and codigo_ingresado != CODIGO_GERENTE:
-            error("Código de gerente incorrecto.")
-        elif repo.usuario_por_email(correo):
-            error("Ese correo ya está registrado.")
         else:
+            if primero:
+                repo.autorizar(correo, "Gerente")
+                rol_final = "Gerente"
+            else:
+                rol_final = permiso.rol
             h, salt = crear_hash(clave)
-            rol_final = "Gerente" if codigo_ingresado else "Residente"
             u = Usuario(nom, correo, h, salt, rol_final)
             try:
                 repo.guardar(u)
@@ -130,7 +132,6 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
                 email,
                 password,
                 confirmar,
-                codigo,
                 mensaje,
                 boton,
                 cambio,
@@ -141,4 +142,3 @@ def mostrar(page: ft.Page, repo: Repositorio, al_entrar) -> None:
         ),
     )
     page.add(ft.Container(content=tarjeta, alignment=ft.Alignment(0, 0), expand=True))
-
